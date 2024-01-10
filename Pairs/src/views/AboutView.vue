@@ -19,6 +19,8 @@
 
 <script setup>
 import { ref, computed, reactive, watch } from 'vue'
+
+// ARRAYS
 const compare = reactive({
   cards: []
 })
@@ -34,29 +36,46 @@ let arr = [
 
 const PictureArray = ref(arr)
 
+// Functions
+
 function sentToCompare(event) {
-  compare.cards.push(event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''))
+  compare.cards.push([
+    event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''),
+    event.target.className
+  ])
+  event.target.style.webkitFilter = 'brightness(1)'
+
+  if (compare.cards.length > 1) {
+    if (
+      compare.cards[1][1] !== compare.cards[0][1] &&
+      compare.cards[1][0] === compare.cards[0][0]
+    ) {
+      let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)} `)
+      let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)} `)
+      firstCard.className = ` ${compare.cards[0][1] + new Date()}`
+      secondCard.className = ` ${compare.cards[1][1] + new Date()}`
+      compare.cards = []
+      console.log('есть совпадение')
+    } else {
+      let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)} `)
+      let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)} `)
+      setTimeout(() => {
+        firstCard.style.webkitFilter = 'brightness(0)'
+        secondCard.style.webkitFilter = 'brightness(0)'
+      }, 500)
+
+      compare.cards = []
+    }
+  }
+
+  // console.log((event.target.style.webkitFilter = 'brightness(1)'))
   // console.log(event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''))
 }
-
 function shuffle(array) {
   array.sort(() => Math.random() - 0.5)
 }
+
 shuffle(arr)
-
-const computeResult = computed(() => {
-  return typeof compare.cards[0] == 'string' && typeof compare.cards[1] == 'string' ? true : false
-})
-
-watch(computeResult, (newComputeResult) => {
-  // console.log('карта 1 и 2', compare.cards[0] === arr1[0])
-  if (compare.cards[0] === compare.cards[1]) {
-    PictureArray.value = PictureArray.value.filter((k) => k !== compare.cards[1])
-    compare.cards = []
-    console.log('cовпадение', PictureArray)
-  }
-  compare.cards = []
-})
 </script>
 
 <style>
@@ -76,6 +95,7 @@ watch(computeResult, (newComputeResult) => {
 .item {
   /* height: 50px;
   width: 40px; */
+  filter: brightness(0);
   background: linear-gradient(rgba(0, 0, 255, 0.5), rgba(255, 255, 0, 0.5));
   background-size: cover;
   background-position: center;
