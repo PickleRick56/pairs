@@ -7,23 +7,24 @@
         v-for="(item, index) in PictureArray"
         :key="index"
         :class="`item item_${index}`"
-        @click="sentToCompare"
+        v-on:click="sentToCompare"
         :style="{
           backgroundImage: `url(${item})`
         }"
       ></div>
     </div>
-    {{ computeResult }}
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, reactive } from 'vue'
 
 // ARRAYS
 const compare = reactive({
   cards: []
 })
+
+let matchedArr = []
 
 let arr = [
   'https://c3.klipartz.com/pngpicture/577/216/sticker-png-tekken-7-king-tekken-character-thumbnail.png',
@@ -39,32 +40,44 @@ const PictureArray = ref(arr)
 // Functions
 
 function sentToCompare(event) {
-  compare.cards.push([
-    event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''),
-    event.target.className
-  ])
-  event.target.style.webkitFilter = 'brightness(1)'
+  if (!checkMantched(event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''))) {
+    compare.cards.push([
+      event.target.style.backgroundImage.slice(4, -1).replace(/"/g, ''),
+      event.target.className
+    ])
+    event.target.style.webkitFilter = 'brightness(1)'
 
-  if (compare.cards.length > 1) {
-    if (
-      compare.cards[1][1] !== compare.cards[0][1] &&
-      compare.cards[1][0] === compare.cards[0][0]
-    ) {
-      let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)} `)
-      let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)} `)
-      firstCard.className = ` ${compare.cards[0][1] + new Date()}`
-      secondCard.className = ` ${compare.cards[1][1] + new Date()}`
-      compare.cards = []
-      console.log('есть совпадение')
-    } else {
-      let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)} `)
-      let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)} `)
-      setTimeout(() => {
-        firstCard.style.webkitFilter = 'brightness(0)'
-        secondCard.style.webkitFilter = 'brightness(0)'
-      }, 500)
+    if (compare.cards.length > 1) {
+      if (
+        compare.cards[1][1] !== compare.cards[0][1] &&
+        compare.cards[1][0] === compare.cards[0][0]
+      ) {
+        //находим элемент по классу
+        let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)}`)
+        let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)}`)
 
-      compare.cards = []
+        document.querySelector(`.${compare.cards[0][1].slice(5)}`).removeAttribute('onclick')
+        document.querySelector(`.${compare.cards[1][1].slice(5)}`).removeAttribute('onclick')
+
+        // найденому элементу меняем класс на класс с датой
+        firstCard.className = `${compare.cards[0][1]}`
+
+        secondCard.className = `${compare.cards[1][1]}`
+
+        // записываем новый класс элемента в массив
+        matchedArr.push(compare.cards[1][0])
+        compare.cards = []
+        console.log('есть совпадение')
+      } else {
+        let firstCard = document.querySelector(`.${compare.cards[0][1].slice(5)}`)
+        let secondCard = document.querySelector(`.${compare.cards[1][1].slice(5)}`)
+        setTimeout(() => {
+          firstCard.style.webkitFilter = 'brightness(0)'
+          secondCard.style.webkitFilter = 'brightness(0)'
+        }, 500)
+
+        compare.cards = []
+      }
     }
   }
 
@@ -76,6 +89,10 @@ function shuffle(array) {
 }
 
 shuffle(arr)
+
+function checkMantched(url) {
+  return matchedArr.includes(url)
+}
 </script>
 
 <style>
